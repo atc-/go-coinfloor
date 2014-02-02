@@ -23,8 +23,22 @@ type Auth struct {
 	Sig []string `json:"signature"`
 }
 
+/*
+ * Return a pointer to a websocket handle
+ */
 func Connect(url string, origin string) (*websocket.Conn, error) {
 	return websocket.Dial(url, "", origin)
+}
+
+/*
+ * Serialises msg, then writes to the websocket
+ */
+func Send(ws *websocket.Conn, msg interface{}) (int, error) {
+	b, e := Serialise(msg)
+	if e != nil {
+		return 0, e
+	}
+	return ws.Write(b)
 }
 
 /*
