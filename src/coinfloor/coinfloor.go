@@ -27,11 +27,17 @@ func Connect(url string, origin string) (*websocket.Conn, error) {
 	return websocket.Dial(url, "", origin)
 }
 
+/*
+ * Convert v to a json string
+ */
 func Serialise(v interface{}) (b []byte, e error) {
 	b, e = json.Marshal(v)
 	return b, e
 }
 
+/*
+ * Generate a random 16-bit integer for the message tag
+ */
 func Tag() (n int16) {
 	b := make([]byte, 2)
 	rand.Read(b)
