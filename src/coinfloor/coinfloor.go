@@ -3,13 +3,14 @@ package coinfloor
 import (
 	"encoding/json"
 	"crypto/rand"
+	"code.google.com/p/go.net/websocket" 
 )
 
 type Cookie struct {
 }
 
 type Req struct {
-	Tag int `json:"tag"`
+	Tag int16 `json:"tag"`
 	Method string `json:"method"`
 }
 
@@ -20,6 +21,10 @@ type Auth struct {
 	Cookie string `json:"cookie"`
 	Nonce []byte `json:"nonce"`
 	Sig []string `json:"signature"`
+}
+
+func Connect(url string, origin string) (*websocket.Conn, error) {
+	return websocket.Dial(url, "", origin)
 }
 
 func Serialise(v interface{}) (b []byte, e error) {
