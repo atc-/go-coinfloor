@@ -4,9 +4,29 @@ import (
 	"encoding/json"
 	"crypto/rand"
 	"code.google.com/p/go.net/websocket" 
+	"log"
 )
 
-type Cookie struct {
+type Connecter interface {
+	Connect() (Connection, error)
+}
+
+type Sender interface {
+	Send(msg interface{}) (int, error)
+}
+
+type Reader interface {
+	Read(ty interface{}) (int, error)
+}
+
+type Connection struct {
+	ws *websocket.Conn
+	Url string
+	Origin string
+	Connected bool
+}
+
+type Res struct {
 }
 
 type Req struct {
@@ -23,22 +43,51 @@ type Auth struct {
 	Sig []string `json:"signature"`
 }
 
-/*
- * Return a pointer to a websocket handle
- */
-func Connect(url string, origin string) (*websocket.Conn, error) {
-	return websocket.Dial(url, "", origin)
+type Welcome struct {
+	Nonce string `json:"nonce"`
+	Notice string `json:"notice"`
 }
 
 /*
- * Serialises msg, then writes to the websocket
+ * Convenience func for creating and connecting to a server
  */
-func Send(ws *websocket.Conn, msg interface{}) (int, error) {
+func Connect(url string, origin string) (con *Connection, err error) {
+	con = new (Connection)
+	con.Url = url
+	con.Origin = origin
+	return con.Connect()
+}
+
+func (con *Connection) Connect() (*Connection, error) {
+	ws, err := websocket.Dial(con.Url, "", con.Origin)
+	con.ws = ws
+	return con, err
+}
+
+/*
+ * Reads 512 bytes from the connection and writes to ty
+ * returning the number read and optionally an error
+ */
+func (r *Connection) Read(ty interface{}) (int, error) {
+	msg := make([]byte, 512)
+	n, err := r.ws.Read(msg)
+	
+	if err != nil {
+		return n, err
+	}
+	return n, json.Unmarshal(msg[:n], ty)
+}
+
+/*
+ * Serialises msg, then writes to the connection
+ */
+func (con *Connection) Send(msg interface{}) (int, error) {
 	b, e := Serialise(msg)
 	if e != nil {
 		return 0, e
 	}
-	return ws.Write(b)
+	log.Printf("Write: %s\n", b)
+	return con.ws.Write(b)
 }
 
 /*
