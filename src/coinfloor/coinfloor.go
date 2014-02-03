@@ -8,7 +8,7 @@ import (
 )
 
 type Connecter interface {
-	Connect() (Connection, error)
+	Connect() (error)
 }
 
 type Sender interface {
@@ -55,13 +55,14 @@ func Connect(url string, origin string) (con *Connection, err error) {
 	con = new (Connection)
 	con.Url = url
 	con.Origin = origin
-	return con.Connect()
+	err = con.Connect()
+	return con, err
 }
 
-func (con *Connection) Connect() (*Connection, error) {
+func (con *Connection) Connect() (error) {
 	ws, err := websocket.Dial(con.Url, "", con.Origin)
 	con.ws = ws
-	return con, err
+	return err
 }
 
 /*
