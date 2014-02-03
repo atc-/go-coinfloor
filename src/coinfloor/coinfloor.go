@@ -109,8 +109,8 @@ func Tag() (n int16) {
 }
 
 func Nonce() ([]byte) {
-    b := make([]byte, 16)
-    rand.Read(b)
+	b := make([]byte, 16)
+	rand.Read(b)
 	return b
 }
 
