@@ -23,4 +23,7 @@ _testmain.go
 
 # Ignore packages
 *code.google.com*
+
+# Ignore vim swap files
 *.swp
+*.swo
