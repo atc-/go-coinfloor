@@ -2,6 +2,7 @@ package coinfloor
 
 import (
 	"encoding/json"
+	"errors"
 	"crypto/rand"
 	"code.google.com/p/go.net/websocket" 
 	"log"
@@ -9,6 +10,7 @@ import (
 
 type Connecter interface {
 	Connect() (error)
+	Disconnect() (error)
 }
 
 type Sender interface {
@@ -49,13 +51,14 @@ type Welcome struct {
 }
 
 /*
- * Convenience func for creating and connecting to a server
+ * Convenience func for creating a connection and connecting to a server
  */
 func Connect(url string, origin string) (con *Connection, err error) {
 	con = new (Connection)
 	con.Url = url
 	con.Origin = origin
 	err = con.Connect()
+	con.Connected = err == nil
 	return con, err
 }
 
@@ -65,13 +68,21 @@ func (con *Connection) Connect() (error) {
 	return err
 }
 
+func (con *Connection) Disconnect() (error) {
+	return con.ws.Close()
+}
+
 /*
  * Reads 512 bytes from the connection and writes to ty
  * returning the number read and optionally an error
  */
-func (r *Connection) Read(ty interface{}) (int, error) {
+func (c *Connection) Read(ty interface{}) (int, error) {
+	if !c.Connected {
+		return -1, errors.New("Not connected")
+	}
+
 	msg := make([]byte, 512)
-	n, err := r.ws.Read(msg)
+	n, err := c.ws.Read(msg)
 	
 	if err != nil {
 		return n, err
@@ -82,13 +93,17 @@ func (r *Connection) Read(ty interface{}) (int, error) {
 /*
  * Serialises msg, then writes to the connection
  */
-func (con *Connection) Send(msg interface{}) (int, error) {
+func (c *Connection) Send(msg interface{}) (int, error) {
+	if !c.Connected {
+		return -1, errors.New("Not connected")
+	}
+
 	b, e := Serialise(msg)
 	if e != nil {
 		return 0, e
 	}
 	log.Printf("Write: %s\n", b)
-	return con.ws.Write(b)
+	return c.ws.Write(b)
 }
 
 /*
