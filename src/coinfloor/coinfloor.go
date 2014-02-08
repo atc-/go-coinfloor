@@ -29,6 +29,9 @@ type Connection struct {
 }
 
 type Res struct {
+	Tag int `json:"tag"`
+	ErrorCode int `json:"error_code"`
+	ErrorMsg string `json:"error_msg"`
 }
 
 type Req struct {
@@ -41,7 +44,7 @@ type Auth struct {
 	Method string `json:"method"`
 	User int `json:"user_id"`
 	Cookie string `json:"cookie"`
-	Nonce []byte `json:"nonce"`
+	Nonce string `json:"nonce"`
 	Sig []string `json:"signature"`
 }
 
@@ -120,7 +123,7 @@ func Serialise(v interface{}) (b []byte, e error) {
 func Tag() (n int16) {
 	b := make([]byte, 2)
 	rand.Read(b)
-	return int16(b[0] & b[1])
+	return int16(b[0] | b[1])
 }
 
 func Nonce() ([]byte) {
