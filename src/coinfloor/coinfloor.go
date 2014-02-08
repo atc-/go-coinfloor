@@ -1,16 +1,22 @@
 package coinfloor
 
 import (
+	"bytes"
+	"code.google.com/p/go.net/websocket"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
-	"crypto/rand"
-	"code.google.com/p/go.net/websocket" 
 	"log"
+	"math/big"
 )
 
 type Connecter interface {
-	Connect() (error)
-	Disconnect() (error)
+	Connect() error
+	Disconnect() error
 }
 
 type Sender interface {
@@ -22,34 +28,34 @@ type Reader interface {
 }
 
 type Connection struct {
-	ws *websocket.Conn
-	Url string
-	Origin string
+	ws        *websocket.Conn
+	Url       string
+	Origin    string
 	Connected bool
 }
 
 type Res struct {
-	Tag int `json:"tag"`
-	ErrorCode int `json:"error_code"`
-	ErrorMsg string `json:"error_msg"`
+	Tag       int    `json:"tag"`
+	ErrorCode int    `json:"error_code"`
+	ErrorMsg  string `json:"error_msg"`
 }
 
 type Req struct {
-	Tag int16 `json:"tag"`
+	Tag    int16  `json:"tag"`
 	Method string `json:"method"`
 }
 
 type Auth struct {
-	Tag int16 `json:"tag"`
-	Method string `json:"method"`
-	User int `json:"user_id"`
-	Cookie string `json:"cookie"`
-	Nonce string `json:"nonce"`
-	Sig []string `json:"signature"`
+	Tag    int16    `json:"tag"`
+	Method string   `json:"method"`
+	User   int      `json:"user_id"`
+	Cookie string   `json:"cookie"`
+	Nonce  string   `json:"nonce"`
+	Sig    []string `json:"signature"`
 }
 
 type Welcome struct {
-	Nonce string `json:"nonce"`
+	Nonce  string `json:"nonce"`
 	Notice string `json:"notice"`
 }
 
@@ -57,7 +63,7 @@ type Welcome struct {
  * Convenience func for creating a connection and connecting to a server
  */
 func Connect(url string, origin string) (con *Connection, err error) {
-	con = new (Connection)
+	con = new(Connection)
 	con.Url = url
 	con.Origin = origin
 	err = con.Connect()
@@ -65,13 +71,13 @@ func Connect(url string, origin string) (con *Connection, err error) {
 	return con, err
 }
 
-func (con *Connection) Connect() (error) {
+func (con *Connection) Connect() error {
 	ws, err := websocket.Dial(con.Url, "", con.Origin)
 	con.ws = ws
 	return err
 }
 
-func (con *Connection) Disconnect() (error) {
+func (con *Connection) Disconnect() error {
 	return con.ws.Close()
 }
 
@@ -86,7 +92,7 @@ func (c *Connection) Read(ty interface{}) (int, error) {
 
 	msg := make([]byte, 512)
 	n, err := c.ws.Read(msg)
-	
+
 	if err != nil {
 		return n, err
 	}
@@ -126,9 +132,32 @@ func Tag() (n int16) {
 	return int16(b[0] | b[1])
 }
 
-func Nonce() ([]byte) {
+func Nonce() string {
 	b := make([]byte, 16)
 	rand.Read(b)
-	return b
+	return string(b)
 }
 
+func NewKey(userId string, pass string) (prKey ecdsa.PrivateKey) {
+	log.Println("Hashing userId + pass", userId+pass)
+	sum := sha256.New224().Sum([]byte(userId + pass))
+	log.Println("Hash is ", sum)
+
+	var in int64
+	reader := bytes.NewReader(sum)
+	err := binary.Read(reader, binary.BigEndian, &in)
+	log.Println("Hashed to int64 ", in)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	prKey.D = big.NewInt(in)
+	prKey.PublicKey.Curve = elliptic.P224()
+	return prKey
+}
+
+func NewMsg(userId string, srNonce string, clNonce string) []byte {
+	log.Println("Hashing for msg ", userId, srNonce, clNonce)
+	return sha256.New224().Sum([]byte(userId + srNonce + clNonce))
+}
