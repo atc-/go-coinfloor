@@ -18,6 +18,7 @@ func main () {
 	}
 
 	userId, pass, cookie := args[0], args[1], args[2]
+	log.Println("Give userId, pass and cookie: ", userId, pass, cookie)
 	con, _ := coinfloor.Connect("ws://api.coinfloor.co.uk:80/", "http://atc.gd/")
 	
 	welcome := new(coinfloor.Welcome)
@@ -25,7 +26,7 @@ func main () {
 
 	log.Println("Welcome is ", welcome)
 
-    srNonce, clNonce := welcome.Nonce, coinfloor.Nonce()
+    srNonce, clNonce := welcome.Nonce, enc(coinfloor.Nonce())
 
     key := coinfloor.NewKey(userId, pass)
     msg := coinfloor.NewMsg(userId, srNonce, clNonce)
@@ -33,7 +34,7 @@ func main () {
     log.Println("key is ", key)
 
     r, s, err := ecdsa.Sign(rand.Reader, &key, msg)
-	sig := []string{enc(r.String())[:40], enc(s.String())[:40]}
+	sig := []string{enc(r.String()), enc(s.String())}
 
     log.Println("R, s, err are: ", r, s, err)
 
@@ -45,6 +46,8 @@ func main () {
         Nonce: clNonce,
         Sig: sig,
     }
+
+	log.Println("Auth is ", t)
 
     if _, err := con.Send(t); err != nil {
         log.Fatal("Error authorizing: ", err)
