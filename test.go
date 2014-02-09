@@ -18,7 +18,7 @@ func main () {
 		return
 	}
 
-	userId, uidErr := strconv.ParseUint(args[0], 10, 64)
+	userId, uidErr := strconv.ParseInt(args[0], 10, 64)
 
 	if uidErr != nil {
 		log.Fatal("Invalid user id ", userId, uidErr)

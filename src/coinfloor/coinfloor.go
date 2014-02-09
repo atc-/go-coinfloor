@@ -138,9 +138,10 @@ func Nonce() string {
 	return string(b)
 }
 
-func NewKey(userId uint64, pass string) (prKey ecdsa.PrivateKey) {
-	buf := make([]byte, 2) // this will eventually break; reads to [n, sign]
-	binary.PutUvarint(buf, userId)
+func NewKey(userId int64, pass string) (prKey ecdsa.PrivateKey) {
+	buf := make([]byte, 64)
+	//binary.PutUvarint(buf, userId)
+	binary.PutVarint(buf, userId)
 	passArr := []byte(pass)
 	sha := sha256.New224()
 	buf = buf[:1] // FIXME
