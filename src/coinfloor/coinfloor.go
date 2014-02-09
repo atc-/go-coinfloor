@@ -138,15 +138,25 @@ func Nonce() string {
 	return string(b)
 }
 
-func NewKey(userId string, pass string) (prKey ecdsa.PrivateKey) {
-	log.Println("Hashing userId + pass", userId+pass)
-	sum := sha256.New224().Sum([]byte(userId + pass))
+func NewKey(userId uint64, pass string) (prKey ecdsa.PrivateKey) {
+	buf := make([]byte, 2) // this will eventually break; reads to [n, sign]
+	binary.PutUvarint(buf, userId)
+	passArr := []byte(pass)
+	sha := sha256.New224()
+	buf = buf[:1] // FIXME
+	log.Println("id and pass as bytes", buf, passArr)
+	sha.Write(buf) 
+	sha.Write(passArr)
+
+	log.Println("Pre-hash buffer:", buf)
+	sha.Write(buf)
+	sum := sha.Sum(nil)
 	log.Println("Hash is ", sum)
 
 	var in int64
 	reader := bytes.NewReader(sum)
 	err := binary.Read(reader, binary.BigEndian, &in)
-	log.Println("Hashed to int64 ", in)
+	log.Println("Hashed to uint64 ", in, uint64(in))
 
 	if err != nil {
 		log.Fatal(err)
