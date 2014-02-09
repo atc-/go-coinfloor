@@ -7,6 +7,7 @@ import (
     "encoding/base64"
     "log"
 	"os"
+	"strconv"
 )
 
 func main () {
@@ -17,7 +18,14 @@ func main () {
 		return
 	}
 
-	userId, pass, cookie := args[0], args[1], args[2]
+	userId, uidErr := strconv.ParseUint(args[0], 10, 64)
+
+	if uidErr != nil {
+		log.Fatal("Invalid user id ", userId, uidErr)
+	}
+	
+
+	pass, cookie := args[1], args[2]
 	log.Println("Give userId, pass and cookie: ", userId, pass, cookie)
 	con, _ := coinfloor.Connect("ws://api.coinfloor.co.uk:80/", "http://atc.gd/")
 	
@@ -29,7 +37,7 @@ func main () {
     srNonce, clNonce := welcome.Nonce, enc(coinfloor.Nonce())
 
     key := coinfloor.NewKey(userId, pass)
-    msg := coinfloor.NewMsg(userId, srNonce, clNonce)
+    msg := coinfloor.NewMsg(string(userId), srNonce, clNonce)
 
     log.Println("key is ", key)
 
