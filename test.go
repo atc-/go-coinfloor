@@ -24,7 +24,6 @@ func main () {
 		log.Fatal("Invalid user id ", userId, uidErr)
 	}
 	
-
 	pass, cookie := args[1], args[2]
 	log.Println("Give userId, pass and cookie: ", userId, pass, cookie)
 	con, _ := coinfloor.Connect("ws://api.coinfloor.co.uk:80/", "http://atc.gd/")

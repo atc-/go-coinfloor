@@ -139,18 +139,13 @@ func Nonce() string {
 }
 
 func NewKey(userId int64, pass string) (prKey ecdsa.PrivateKey) {
-	buf := make([]byte, 64)
-	//binary.PutUvarint(buf, userId)
-	binary.PutVarint(buf, userId)
 	passArr := []byte(pass)
+	uid := make([]byte, 8)
+	binary.BigEndian.PutUint64(uid, uint64(userId))
 	sha := sha256.New224()
-	buf = buf[:1] // FIXME
-	log.Println("id and pass as bytes", buf, passArr)
-	sha.Write(buf) 
+	log.Println("pass as bytes", passArr)
+	sha.Write(uid) 
 	sha.Write(passArr)
-
-	log.Println("Pre-hash buffer:", buf)
-	sha.Write(buf)
 	sum := sha.Sum(nil)
 	log.Println("Hash is ", sum)
 
