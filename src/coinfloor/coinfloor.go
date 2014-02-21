@@ -1,7 +1,7 @@
 package coinfloor
 
 import (
-	"bytes"
+	//"bytes"
 	"code.google.com/p/go.net/websocket"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -144,22 +144,14 @@ func NewKey(userId int64, pass string) (prKey ecdsa.PrivateKey) {
 	binary.BigEndian.PutUint64(uid, uint64(userId))
 	sha := sha256.New224()
 	log.Println("pass as bytes", passArr)
-	sha.Write(uid) 
+	sha.Write(uid)
 	sha.Write(passArr)
 	sum := sha.Sum(nil)
 	log.Println("Hash is ", sum)
 
-	var in int64
-	reader := bytes.NewReader(sum)
-	err := binary.Read(reader, binary.BigEndian, &in)
-	log.Println("Hashed to uint64 ", in, uint64(in))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	prKey.D = big.NewInt(in)
+	prKey.D = new(big.Int).SetBytes(sum)
 	prKey.PublicKey.Curve = elliptic.P224()
+	prKey.PublicKey.X, prKey.PublicKey.Y = elliptic.P224().ScalarBaseMult(sum)
 	return prKey
 }
 
