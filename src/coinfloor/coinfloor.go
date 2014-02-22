@@ -1,13 +1,11 @@
 package coinfloor
 
 import (
-	//"bytes"
 	"code.google.com/p/go.net/websocket"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"log"
@@ -138,12 +136,11 @@ func Nonce() string {
 	return string(b)
 }
 
-func NewKey(userId int64, pass string) (prKey ecdsa.PrivateKey) {
+func NewKey(uid []byte, pass string) (prKey ecdsa.PrivateKey) {
 	passArr := []byte(pass)
-	uid := make([]byte, 8)
-	binary.BigEndian.PutUint64(uid, uint64(userId))
 	sha := sha256.New224()
 	log.Println("pass as bytes", passArr)
+	log.Println("uid is ", uid)
 	sha.Write(uid)
 	sha.Write(passArr)
 	sum := sha.Sum(nil)
@@ -155,7 +152,6 @@ func NewKey(userId int64, pass string) (prKey ecdsa.PrivateKey) {
 	return prKey
 }
 
-func NewMsg(userId string, srNonce string, clNonce string) []byte {
-	log.Println("Hashing for msg ", userId, srNonce, clNonce)
-	return sha256.New224().Sum([]byte(userId + srNonce + clNonce))
+func NewMsg(userId string, srNonce string, clNonce string) string {
+	return userId + srNonce + clNonce
 }
