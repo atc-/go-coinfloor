@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/big"
 	"coinfloor"
 	"crypto/ecdsa"
 	"crypto/rand"
@@ -25,7 +26,7 @@ func main () {
 	}
 	
 	pass, cookie := args[1], args[2]
-	log.Println("Give userId, pass and cookie: ", userId, pass, cookie)
+	log.Println("Given userId, pass and cookie: ", userId, pass, cookie)
 	con, _ := coinfloor.Connect("ws://api.coinfloor.co.uk:80/", "http://atc.gd/")
 	
 	welcome := new(coinfloor.Welcome)
@@ -35,12 +36,14 @@ func main () {
 
     srNonce, clNonce := welcome.Nonce, enc(coinfloor.Nonce())
 
-    key := coinfloor.NewKey(userId, pass)
-    msg := coinfloor.NewMsg(string(userId), srNonce, clNonce)
+	uid := new(big.Int).SetInt64(userId)
+    key := coinfloor.NewKey(uid.Bytes(), pass)
+    msg := coinfloor.NewMsg(uid.String(), srNonce, clNonce)
 
     log.Println("key is ", key)
+	log.Println("msg is ", msg)
 
-    r, s, err := ecdsa.Sign(rand.Reader, &key, msg)
+    r, s, err := ecdsa.Sign(rand.Reader, &key, []byte(msg))
 	sig := []string{enc(r.String()), enc(s.String())}
 
     log.Println("R, s, err are: ", r, s, err)
