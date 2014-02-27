@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"encoding/hex"
 	"log"
 	"math/big"
 )
@@ -136,16 +137,11 @@ func Nonce() string {
 	return string(b)
 }
 
-func NewKey(uid []byte, pass string) (prKey ecdsa.PrivateKey) {
-	passArr := []byte(pass)
+func NewKey(uid string, pass string) (prKey ecdsa.PrivateKey) {
 	sha := sha256.New224()
-	log.Println("pass as bytes", passArr)
-	log.Println("uid is ", uid)
-	sha.Write(uid)
-	sha.Write(passArr)
+	sha.Write([]byte(uid + pass))
 	sum := sha.Sum(nil)
-	log.Println("Hash is ", sum)
-
+	log.Println("Hash is ", hex.EncodeToString(sum))
 	prKey.D = new(big.Int).SetBytes(sum)
 	prKey.PublicKey.Curve = elliptic.P224()
 	prKey.PublicKey.X, prKey.PublicKey.Y = elliptic.P224().ScalarBaseMult(sum)
