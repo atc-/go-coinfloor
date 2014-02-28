@@ -38,7 +38,7 @@ func main () {
 
 	uid := new(big.Int).SetInt64(userId)
     key := coinfloor.NewKey(uid, pass)
-    msg := coinfloor.NewMsg(uid, []byte(srNonce), []byte(clNonce))
+    msg := coinfloor.Sum(uid, []byte(srNonce), []byte(clNonce))
 
 	log.Println("Nonces are ", srNonce, clNonce)
     log.Println("key is ", key)

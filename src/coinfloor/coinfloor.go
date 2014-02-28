@@ -150,7 +150,7 @@ func NewKey(userId *big.Int, pass string) (prKey ecdsa.PrivateKey) {
 	return prKey
 }
 
-func NewMsg(userId *big.Int, srNonce []byte, clNonce []byte) []byte {
+func Sum(userId *big.Int, srNonce []byte, clNonce []byte) []byte {
 	uid := uid(userId)
 	sha := sha256.New224()
 	sha.Write(uid)
