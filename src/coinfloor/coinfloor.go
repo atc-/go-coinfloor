@@ -6,9 +6,9 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
-	"encoding/hex"
 	"log"
 	"math/big"
 )
@@ -137,17 +137,31 @@ func Nonce() string {
 	return string(b)
 }
 
-func NewKey(uid string, pass string) (prKey ecdsa.PrivateKey) {
+func NewKey(userId *big.Int, pass string) (prKey ecdsa.PrivateKey) {
 	sha := sha256.New224()
-	sha.Write([]byte(uid + pass))
+	sha.Write(uid(userId))
+	sha.Write([]byte(pass))
 	sum := sha.Sum(nil)
-	log.Println("Hash is ", hex.EncodeToString(sum))
+	log.Printf("Hash is % x \n", sum)
 	prKey.D = new(big.Int).SetBytes(sum)
+	log.Println("Int is ", prKey.D)
 	prKey.PublicKey.Curve = elliptic.P224()
 	prKey.PublicKey.X, prKey.PublicKey.Y = elliptic.P224().ScalarBaseMult(sum)
 	return prKey
 }
 
-func NewMsg(userId string, srNonce string, clNonce string) string {
-	return userId + srNonce + clNonce
+func NewMsg(userId *big.Int, srNonce []byte, clNonce []byte) []byte {
+	uid := uid(userId)
+	sha := sha256.New224()
+	sha.Write(uid)
+	sha.Write(srNonce)
+	sha.Write(clNonce)
+	return sha.Sum(nil)
 }
+
+func uid(userId *big.Int) ([]byte) {
+	uid := make([]byte, 8)
+	binary.BigEndian.PutUint64(uid, userId.Uint64())
+	return uid
+}
+
