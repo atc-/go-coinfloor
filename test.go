@@ -34,26 +34,29 @@ func main () {
 
 	log.Println("Welcome is ", welcome)
 
-    srNonce, clNonce := welcome.Nonce, enc(coinfloor.Nonce())
+    srNonce, clNonce := string(dec(welcome.Nonce)), coinfloor.Nonce()
 
 	uid := new(big.Int).SetInt64(userId)
-    key := coinfloor.NewKey(uid.Bytes(), pass)
-    msg := coinfloor.NewMsg(uid.String(), srNonce, clNonce)
+    key := coinfloor.NewKey(uid, pass)
+    msg := coinfloor.NewMsg(uid, []byte(srNonce), []byte(clNonce))
 
+	log.Println("Nonces are ", srNonce, clNonce)
     log.Println("key is ", key)
-	log.Println("msg is ", msg)
+	log.Println("msg is ", msg, len(msg))
+	log.Printf("msg is % x \n", msg)
 
-    r, s, err := ecdsa.Sign(rand.Reader, &key, []byte(msg))
-	sig := []string{enc(r.String()), enc(s.String())}
+    r, s, err := ecdsa.Sign(rand.Reader, &key, msg)
+	sig := []string{enc(r.Bytes()), enc(s.Bytes())}
 
-    log.Println("R, s, err are: ", r, s, err)
+    log.Println("R, s, err are: ", r.Bytes(), s.Bytes(), err)
+    log.Println("Sig is: ", sig)
 
     t := coinfloor.Auth {
         Tag: coinfloor.Tag(), 
         Method: "Authenticate",
         User: 134, 
         Cookie: cookie,
-        Nonce: clNonce,
+        Nonce: enc([]byte(clNonce)),
         Sig: sig,
     }
 
@@ -75,7 +78,11 @@ func main () {
     }   
 }
 
-func enc(src string) (string) {
-	return base64.StdEncoding.EncodeToString([]byte(src))
+func enc(src []byte) (string) {
+	return base64.StdEncoding.EncodeToString(src)
 }
 
+func dec(src string) ([]byte) {
+	d, _ := base64.StdEncoding.DecodeString(src)
+	return d
+}
