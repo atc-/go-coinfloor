@@ -145,15 +145,10 @@ func NewKey(userId *big.Int, pass string) (prKey *bitecdsa.PrivateKey) {
 	log.Printf("Hash is % x \n", sum)
 	key := new(big.Int).SetBytes(sum)
 	prKey, _ = bitecdsa.GenerateFromPrivateKey(key, bitelliptic.S224())
-	//prKey.D = new(big.Int).SetBytes(sum)
-	//log.Println("Int is ", prKey.D)
-	//prKey.PublicKey.Curve = elliptic.P224()
-	//prKey.PublicKey.Curve = bitelliptic.S224()
-	//prKey.PublicKey.X, prKey.PublicKey.Y = elliptic.P224().ScalarBaseMult(sum)
 	return prKey
 }
 
-func Sum(userId *big.Int, srNonce []byte, clNonce []byte) []byte {
+func BuildMessage(userId *big.Int, srNonce, clNonce []byte) []byte {
 	uid := uid(userId)
 	sha := sha256.New224()
 	sha.Write(uid)
