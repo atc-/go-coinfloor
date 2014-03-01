@@ -1,9 +1,9 @@
 package coinfloor
 
 import (
+	"bitelliptic"
+	"bitecdsa"
 	"code.google.com/p/go.net/websocket"
-	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
@@ -137,16 +137,19 @@ func Nonce() string {
 	return string(b)
 }
 
-func NewKey(userId *big.Int, pass string) (prKey ecdsa.PrivateKey) {
+func NewKey(userId *big.Int, pass string) (prKey *bitecdsa.PrivateKey) {
 	sha := sha256.New224()
 	sha.Write(uid(userId))
 	sha.Write([]byte(pass))
 	sum := sha.Sum(nil)
 	log.Printf("Hash is % x \n", sum)
-	prKey.D = new(big.Int).SetBytes(sum)
-	log.Println("Int is ", prKey.D)
-	prKey.PublicKey.Curve = elliptic.P224()
-	prKey.PublicKey.X, prKey.PublicKey.Y = elliptic.P224().ScalarBaseMult(sum)
+	key := new(big.Int).SetBytes(sum)
+	prKey, _ = bitecdsa.GenerateFromPrivateKey(key, bitelliptic.S224())
+	//prKey.D = new(big.Int).SetBytes(sum)
+	//log.Println("Int is ", prKey.D)
+	//prKey.PublicKey.Curve = elliptic.P224()
+	//prKey.PublicKey.Curve = bitelliptic.S224()
+	//prKey.PublicKey.X, prKey.PublicKey.Y = elliptic.P224().ScalarBaseMult(sum)
 	return prKey
 }
 

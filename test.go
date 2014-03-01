@@ -1,12 +1,12 @@
 package main
 
 import (
-	"math/big"
+	"bitecdsa"
 	"coinfloor"
-	"crypto/ecdsa"
 	"crypto/rand"
     "encoding/base64"
     "log"
+	"math/big"
 	"os"
 	"strconv"
 )
@@ -45,7 +45,7 @@ func main () {
 	log.Println("msg is ", msg, len(msg))
 	log.Printf("msg is % x \n", msg)
 
-    r, s, err := ecdsa.Sign(rand.Reader, &key, msg)
+    r, s, err := bitecdsa.Sign(rand.Reader, key, msg) //ecdsa.Sign(rand.Reader, &key, msg)
 	sig := []string{enc(r.Bytes()), enc(s.Bytes())}
 
     log.Println("R, s, err are: ", r.Bytes(), s.Bytes(), err)
